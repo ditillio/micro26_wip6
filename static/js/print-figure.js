@@ -1,7 +1,7 @@
 // print-figure.js - versione con conversione canvas/svg -> img
 document.addEventListener("DOMContentLoaded", () => {
 
-  const FIG_RE = /^(FIGURA|FIGURE)\s+\d+\.\d+/; // etichetta in maiuscolo come fonte d'autorità
+  const FIG_RE = /^(FIGURA|FIGURE)\s+\d+(?:\.\d+)*/; // etichetta in maiuscolo come fonte d'autorità
 
   function isFigureLabelText(t) {
     return !!t && FIG_RE.test(t.trim());
@@ -166,7 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // prepara label stampabile (se labelEl fornita)
     let printableHTML;
     if (labelEl) {
-      const labelTxt = (labelEl.textContent || "").trim().match(/^(FIGURA|FIGURE)\s+\d+\.\d+/);
+      const labelTxt = (labelEl.textContent || "").trim().match(/^(FIGURA|FIGURE)\s+\d+(?:\.\d+)*/);
       if (labelTxt) {
         printableHTML = `<div class="print-figure-label" style="font-weight:700;margin-bottom:8mm;border-bottom:1px solid #ddd;padding-bottom:6px;">${labelTxt[0]}</div>` + clone.outerHTML;
       } else {
