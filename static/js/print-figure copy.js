@@ -1,4 +1,4 @@
-// print-figure.js - versione con conversione canvas/svg -> img
+// print-figure.js - versione semplificata e robusta
 document.addEventListener("DOMContentLoaded", () => {
 
   const FIG_RE = /^(FIGURA|FIGURE)\s+\d+\.\d+/; // etichetta in maiuscolo come fonte d'autorità
@@ -46,91 +46,9 @@ document.addEventListener("DOMContentLoaded", () => {
     return btn;
   }
 
-  // ---------- helper: convert canvases & svgs in the clone to images ----------
-  function convertGraphicsToImages(origRoot, cloneRoot) {
-    // 1) canvases
-    try {
-      const origCanvases = Array.from(origRoot.querySelectorAll('canvas'));
-      const cloneCanvases = Array.from(cloneRoot.querySelectorAll('canvas'));
-      origCanvases.forEach((origCanvas, idx) => {
-        const cloneCanvas = cloneCanvases[idx];
-        if (!cloneCanvas) return;
-        try {
-          // try to get a PNG data URL from original canvas
-          const data = origCanvas.toDataURL('image/png');
-          const img = document.createElement('img');
-          img.src = data;
-          // preserve sizing / style
-          if (cloneCanvas.width) img.width = cloneCanvas.width;
-          if (cloneCanvas.height) img.height = cloneCanvas.height;
-          if (cloneCanvas.style && cloneCanvas.style.width) img.style.width = cloneCanvas.style.width;
-          if (cloneCanvas.style && cloneCanvas.style.height) img.style.height = cloneCanvas.style.height;
-          cloneCanvas.parentNode && cloneCanvas.parentNode.replaceChild(img, cloneCanvas);
-        } catch (err) {
-          // toDataURL may fail for tainted canvas (CORS) -- log and leave the clone canvas as-is
-          console.warn('print-figure: could not convert canvas to image (tainted or cross-origin?):', err, origCanvas);
-        }
-      });
-    } catch (e) {
-      console.warn('print-figure: error converting canvases', e);
-    }
-
-    // 2) SVGs
-    try {
-      const origSvgs = Array.from(origRoot.querySelectorAll('svg'));
-      const cloneSvgs = Array.from(cloneRoot.querySelectorAll('svg'));
-      origSvgs.forEach((origSvg, idx) => {
-        const cloneSvg = cloneSvgs[idx];
-        if (!cloneSvg) return;
-        try {
-          const serializer = new XMLSerializer();
-          let svgStr = serializer.serializeToString(origSvg);
-
-          // Add namespace if missing
-          if (!svgStr.match(/^<svg[^>]+xmlns=/)) {
-            svgStr = svgStr.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
-          }
-          // Fix xlink namespace if needed
-          if (svgStr.indexOf('xmlns:xlink') === -1 && svgStr.indexOf('xlink:href') !== -1) {
-            svgStr = svgStr.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
-          }
-
-          const encoded = encodeURIComponent(svgStr);
-          const data = 'data:image/svg+xml;charset=utf-8,' + encoded;
-
-          const img = document.createElement('img');
-          img.src = data;
-          // copy width/height attributes if present
-          const w = cloneSvg.getAttribute('width');
-          const h = cloneSvg.getAttribute('height');
-          if (w) img.setAttribute('width', w);
-          if (h) img.setAttribute('height', h);
-          // copy inline styles
-          if (cloneSvg.style && cloneSvg.style.width) img.style.width = cloneSvg.style.width;
-          if (cloneSvg.style && cloneSvg.style.height) img.style.height = cloneSvg.style.height;
-
-          cloneSvg.parentNode && cloneSvg.parentNode.replaceChild(img, cloneSvg);
-        } catch (err) {
-          console.warn('print-figure: could not serialize svg for printing:', err, origSvg);
-        }
-      });
-    } catch (e) {
-      console.warn('print-figure: error converting svgs', e);
-    }
-  }
-  // ---------- end helper ----------
-
-  // apre iframe e stampa (come nella versione precedente), ora con conversione grafica
+  // apre iframe e stampa (come nella versione precedente)
   function openPrintWindowWithFigure(figure, labelEl) {
-    // clone figure
     const clone = figure.cloneNode(true);
-
-    // convert interactive graphics (canvas/svg) in the clone using originals pixels
-    try {
-      convertGraphicsToImages(figure, clone);
-    } catch (err) {
-      console.warn('print-figure: conversion step failed', err);
-    }
 
     // sincronizza inputs/selects/textarea
     const originals = figure.querySelectorAll("input, select, textarea");
@@ -198,8 +116,6 @@ document.addEventListener("DOMContentLoaded", () => {
             body { background: white; margin: 0; padding: 12mm; }
             .kg-container, figure { max-width: 100% !important; box-sizing: border-box; }
             .print-figure-label { font-weight: 700; font-size: 18px; margin-bottom: 10px; }
-            /* ensure images (converted canvases/svg) fit inside the page */
-            img { max-width: 100%; height: auto; display: block; }
           </style>
         </head>
         <body>${printableHTML}</body>
@@ -207,16 +123,11 @@ document.addEventListener("DOMContentLoaded", () => {
     `);
     doc.close();
 
-    // give the iframe a short moment to layout and load data URLs
     setTimeout(() => {
-      try {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-      } catch (err) {
-        console.warn('print-figure: print failed', err);
-      }
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
       setTimeout(()=> iframe.remove(), 1000);
-    }, 250);
+    }, 200);
   }
 
   // MAIN: attach buttons

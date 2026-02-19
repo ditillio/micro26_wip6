@@ -190,3 +190,51 @@
 
 
 
+
+
+
+
+
+/* === Forza sfondo bianco e rimuovi sfondi strani in stampa === */
+@media print {
+  /* forza HTML/BODY bianchi e miglior supporto per stampa colori */
+  html, body {
+    background: #ffffff !important;
+    color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* rimuove solo le immagini di sfondo globali (quelle che spesso generano il giallo) */
+  html, body {
+    background-image: none !important;
+  }
+
+  /* Non azzeriamo più TUTTI i background-color: invece forziamo 
+     bianco sui container principali della pagina dove il "giallo" appare */
+  body, .page, .site-content, main, article, .kg-container {
+    background-color: #ffffff !important;
+  }
+
+  /* Rimuoviamo background-image di tutti gli elementi (non i colori) */
+  * { background-image: none !important; }
+
+  /* Manteniamo i background-color specifici (es. celle di tabella) così come sono.
+     Se qualche elemento specifico dovesse comunque essere ignorato, puoi
+     marcarlo con la classe .force-white-print per forzarlo a bianco. */
+  .force-white-print, .force-white-print * {
+    background-color: #ffffff !important;
+    background-image: none !important;
+  }
+
+  /* Assicuriamo che le immagini convertite e i canvas si adattino alla pagina */
+  img { max-width: 100% !important; height: auto !important; display: block; }
+
+  /* margini di pagina */
+  @page { margin: 12mm; }
+}
+
+
+
+
+

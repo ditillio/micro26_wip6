@@ -1,6 +1,12 @@
 
 
-
+/*stile della label FIGURA X.Y*/
+.figure-label {
+  font-weight: 700;
+  font-size: 1.4rem;
+  margin-bottom: 1.4rem;
+  letter-spacing: 0.4px;
+}
 
 .figure-label-wrap {
   display: inline-flex;
@@ -14,6 +20,9 @@
   gap: 8px;
 }
 
+
+
+
 .print-figure-btn {
   background: none;
   border: none;
@@ -26,6 +35,13 @@
 .print-figure-btn:hover {
   opacity: 0.6;
 }
+
+.print-figure-btn svg {
+  width: 26px;
+  height: 24px;
+  vertical-align: 1px;   /* regola questo valore se serve */
+}
+
 
 @media print {
   .print-figure-btn,
