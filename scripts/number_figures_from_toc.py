@@ -214,30 +214,51 @@ def main():
         new_text = FIG_RE.sub(repl_fig, text)
 
         if args.update_refs:
-            def repl_ref(m):
+            # 1) prima sostituisci i token [[FIG:id]]
+            def repl_ref_token(m):
                 fig_id = m.group(1)
                 entry = id_map.get(lang, {}).get(fig_id)
                 if entry:
                     label, page_url = entry
-                    # label can be "FIGURA 2.3" or "FIGURE 2.3"
-                    number = re.sub(r'^FIGURA\s+|^FIGURE\s+', '', label).strip()
-
+                    number = re.sub(r'^(FIGURA|FIGURE)\s+', '', label).strip()
                     word = "Figura" if lang == "it" else "Figure"
                     href = f'{{{{ site.baseurl }}}}/{page_url}#{fig_id}'
                     return f'<a href="{href}">{word} {number}</a>'
                 else:
-                    # fallback: try other language's map
+                    # fallback: try the other language map
                     other = "en" if lang == "it" else "it"
                     entry2 = id_map.get(other, {}).get(fig_id)
                     if entry2:
                         label2, page_url2 = entry2
-                        number2 = label2.replace("FIGURA", "").strip()
+                        number2 = re.sub(r'^(FIGURA|FIGURE)\s+', '', label2).strip()
                         word2 = "Figura" if other == "it" else "Figure"
                         href2 = f'{{{{ site.baseurl }}}}/{page_url2}#{fig_id}'
                         return f'<a href="{href2}">{word2} {number2}</a>'
-                    # else leave token unchanged
                     return m.group(0)
-            new_text = REF_RE.sub(repl_ref, new_text)
+
+            new_text = REF_RE.sub(repl_ref_token, new_text)
+
+            # 2) poi sostituisci anche eventuali anchor HTML già esistenti che puntano a #fig_id
+            #    (es. <a href="/it/I/1/1#gr_figB">Figura 1.2</a> o <a href="#gr_figB">Figura 1.2</a>)
+            #    per ogni fig_id noto nella lingua corrente, sostituisci l'intero <a ...>...</a>
+            #    con la versione aggiornata.
+            for fig_id, (label, page_url) in id_map.get(lang, {}).items():
+                number = re.sub(r'^(FIGURA|FIGURE)\s+', '', label).strip()
+                word = "Figura" if lang == "it" else "Figure"
+                href_full = f'{{{{ site.baseurl }}}}/{page_url}#{fig_id}'
+                # regex per trovare <a ... href="(maybe site.baseurl...)?#fig_id" ...>...</a>
+                # - non-greedy match for attributes and inner text
+                anchor_re = re.compile(
+                    rf'<a\b([^>]*)\bhref=(["\'])(?:[^"\']*?){re.escape("#"+fig_id)}\2([^>]*)>.*?</a>',
+                    flags=re.IGNORECASE | re.DOTALL
+                )
+                # replacement: a consistent anchor pointing to the canonical page_url
+                replacement = f'<a href="{href_full}">{word} {number}</a>'
+                new_text, nrep = anchor_re.subn(replacement, new_text)
+                # (nrep used only implicitly; continue for all fig_ids)
+
+            # 3) fallback: prova anche a trovare anchors che usano other-language page_url
+            #    (rare; handled implicitly above by two-language map during token replacement)
 
         if new_text != text:
             modified.append(rel)
