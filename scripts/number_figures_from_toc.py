@@ -219,7 +219,9 @@ def main():
                 entry = id_map.get(lang, {}).get(fig_id)
                 if entry:
                     label, page_url = entry
-                    number = label.replace("FIGURA", "").strip()
+                    # label can be "FIGURA 2.3" or "FIGURE 2.3"
+                    number = re.sub(r'^FIGURA\s+|^FIGURE\s+', '', label).strip()
+
                     word = "Figura" if lang == "it" else "Figure"
                     href = f'{{{{ site.baseurl }}}}/{page_url}#{fig_id}'
                     return f'<a href="{href}">{word} {number}</a>'
