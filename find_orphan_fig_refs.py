@@ -3,11 +3,15 @@
 find_orphan_fig_refs.py
 
 Cerca riferimenti a figure non corrispondenti ad alcuna <p class="figure-label" id="...">,
-limitandosi agli id che iniziano con "gr_".
+limitandosi agli id che iniziano con "gr_" e considerando come anchor HTML solo quelli
+il cui testo interno corrisponde allo stile generato dallo script:
+  - "Figura X"  (italiano)
+  - "Figure X"  (inglese)
+(es. "Figura 2.3", "Figure 1.1")
 
 Riferimenti cercati:
 - token [[FIG:gr_...]]
-- anchor HTML con href contenente #gr_...
+- anchor HTML con href contenente #gr_... e inner-text matching "Figura|Figure N(.M)*"
 
 Exit codes:
   0 -> nessun orphan
@@ -30,14 +34,22 @@ LABEL_RE = re.compile(
 # token [[FIG:id]]
 TOKEN_RE = re.compile(r'\[\[\s*FIG\s*:\s*([^\]\s]+)\s*\]\]', re.IGNORECASE)
 
-# href="...#id"
-ANCHOR_RE = re.compile(
-    r'href\s*=\s*(?P<q>["\'])(?P<h>[^"\']*#(?P<id>[^"\'>]+))(?P=q)',
-    re.IGNORECASE
+# regex to find anchor tags with href containing #...  (capture href and inner HTML)
+ANCHOR_FULL_RE = re.compile(
+    r'<a\b([^>]*)\bhref\s*=\s*(?P<q>["\'])(?P<h>[^"\']*#(?P<id>[^"\'>]+))(?P=q)([^>]*)>(?P<inner>.*?)</a>',
+    re.IGNORECASE | re.DOTALL
 )
+
+# regex to detect anchor inner text that matches "Figura 1.2" or "Figure 1.2"
+# allow optional surrounding whitespace and HTML tags inside inner; we'll strip tags before matching
+FIGURE_TEXT_RE = re.compile(r'^\s*(Figura|Figure)\s+\d+(?:\.\d+)*\s*$', re.IGNORECASE)
 
 def is_figure_id(x: str) -> bool:
     return x.startswith(ID_PREFIX)
+
+def strip_tags(s: str) -> str:
+    """Rimuove eventuali tag HTML dall'inner HTML per ottenere solo testo."""
+    return re.sub(r'<[^>]+>', '', s).strip()
 
 def collect_ids(root: Path):
     ids_it = set()
@@ -62,6 +74,11 @@ def collect_ids(root: Path):
     return ids_it, ids_en
 
 def scan_refs(root: Path):
+    """
+    Scansiona file .md e ritorna riferimenti filtrati:
+    - token [[FIG:...]] solo se id inizia con gr_
+    - anchor <a ... href="...#id">inner</a> solo se id startswith gr_ AND inner-text matches Figura|Figure pattern
+    """
     refs = []  # (path_rel, lineno, kind, id, file_lang)
     for lang in ("it", "en"):
         base = root / lang
@@ -70,20 +87,31 @@ def scan_refs(root: Path):
         for p in base.rglob("*.md"):
             rel = p.relative_to(root)
             try:
-                lines = p.read_text(encoding="utf-8").splitlines()
+                text = p.read_text(encoding="utf-8")
             except Exception:
                 continue
+            lines = text.splitlines()
+            # First, scan tokens line-by-line
             for i, L in enumerate(lines, start=1):
-                # tokens
                 for m in TOKEN_RE.finditer(L):
                     fid = m.group(1).strip()
                     if is_figure_id(fid):
                         refs.append((rel, i, "token", fid, lang))
-                # anchors
-                for m in ANCHOR_RE.finditer(L):
-                    fid = m.group("id").strip()
-                    if is_figure_id(fid):
-                        refs.append((rel, i, "anchor", fid, lang))
+            # Then scan anchors across the whole file (to capture multi-line anchors)
+            for m in ANCHOR_FULL_RE.finditer(text):
+                fid = m.group('id').strip()
+                if not is_figure_id(fid):
+                    continue
+                inner_html = m.group('inner')
+                inner_text = strip_tags(inner_html)
+                if FIGURE_TEXT_RE.match(inner_text):
+                    # determine line number roughly by counting newlines up to match.start()
+                    start_pos = m.start()
+                    lineno = text.count('\n', 0, start_pos) + 1
+                    refs.append((rel, lineno, "anchor", fid, lang))
+                else:
+                    # anchor does not look like a figure anchor; ignore it
+                    continue
     return refs
 
 def main():
