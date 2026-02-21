@@ -180,6 +180,40 @@
     setParentLoadParamClean(clean, mode);
   }
 
+
+// --- intercetta navigazione interna all'iframe (link nel testo) -------------
+frame.addEventListener('load', function () {
+  try {
+    const cw = frame.contentWindow;
+    if (!cw) return;
+
+    const path = cw.location.pathname + (cw.location.search || '');
+    let clean = toCleanLoad(path);
+    if (!clean) return;
+
+    // Normalizza: togli .html SOLO per le sezioni numeriche /.../cap/sec(.html)
+    // (così non tocchi pr.html, toc-big.html, ecc.)
+    if (/\/\d+\/\d+\.html$/i.test(clean)) {
+      clean = clean.replace(/\.html$/i, '');
+    }
+
+    // Normalizza anche currentLoad per confronto coerente
+    let currentLoad = getLoadFromUrl();
+    currentLoad = (toCleanLoad(currentLoad) || currentLoad || '');
+
+    if (/\/\d+\/\d+\.html$/i.test(currentLoad)) {
+      currentLoad = currentLoad.replace(/\.html$/i, '');
+    }
+
+    if (currentLoad !== clean) {
+      setParentLoadParamClean(clean, 'push');
+    }
+  } catch (e) {
+    // same-origin è garantito nel tuo caso, quindi non dovrebbe mai fallire
+  }
+});
+
+
   function defaultCleanLoad() {
     return `/${LANG}/toc-big.html`;
   }
