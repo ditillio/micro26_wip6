@@ -22,21 +22,25 @@
       }
     </style>
     <style>
-      .big-toc-layout::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        z-index: 0; /* sotto il contenuto ma sopra lo sfondo di default */
-        background-image: url("{{ site.baseurl }}/assets/big-toc-bg.jpg");
+      body.big-toc-layout{
+        background:
+          linear-gradient(rgba(255,255,248,0.92), rgba(255,255,248,0.85)),
+          url("{{ site.baseurl }}/assets/big-toc-bg.jpg");
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        opacity: 0.08;            /* regola 0.04 - 0.12 a piacere */
-        pointer-events: none;
-        filter: saturate(0.6) blur(0.6px); /* leggero desaturare / blur per sbiadire */
+        background-attachment: fixed;
       }
-      /* assicurati che il contenuto della pagina stia sopra l'immagine */
-      .big-toc-layout > * { position: relative; z-index: 1; }
+      /* --- RIMUOVE L'ALONE CHIARO SUI LINK DELLA TOC --- */
+        body.big-toc-layout .chapter a,
+        body.big-toc-layout .chapter_link a,
+        body.big-toc-layout .chapter_sections a,
+        body.big-toc-layout .chapter_section_row a,
+        body.big-toc-layout .chapter_sections_list a{
+          text-shadow: none !important;
+          -webkit-text-stroke: 0 !important;
+          filter: none !important;
+        }
     </style>
 </head>
 <body class="big-toc-layout">
