@@ -616,8 +616,14 @@ function makeSnippet(text, q, maxLen) {
           frame.setAttribute('src', targetUrl);
           try {
             const u = new URL(window.location.href);
-            u.searchParams.set('load', stripBaseFromUrl(item.url));
-            window.history.pushState({}, '', u.toString());
+
+            const cleanLoad = stripBaseFromUrl(item.url).replace(/\.html$/i, '');
+
+            const base = window.location.pathname;   // es. "/micro26_wip6/it/"
+            const newUrl = base + '?load=' + cleanLoad;
+
+            window.history.pushState({}, '', newUrl);
+
           } catch {}
         } else {
           window.location.href = targetUrl;
