@@ -23,13 +23,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return (lang === "en") ? "Print this figure" : "Stampa questa figura";
   }
 
-  function getLangResetTitle() {
-    const path = window.location.pathname || "";
-    const m = path.match(/\/(it|en)(\/|$)/);
-    const lang = m ? m[1] : "it";
-    return (lang === "en") ? "Reset graph" : "Resetta grafico";
-  }
-
   function makeButton() {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -52,34 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.style.cursor = "pointer";
     return btn;
   }
-
-  // --- NEW: reset button (icona freccia circolare) ---
-  function makeResetButton() {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "reset-graph-btn";
-    btn.setAttribute("aria-label", getLangResetTitle());
-    btn.title = getLangResetTitle();
-
-    // icona "refresh"
-    btn.textContent = "↻";
-    btn.style.fontSize = "20px";
-    btn.style.lineHeight = "1";
-    btn.style.fontWeight = "450";
-    btn.style.position = "relative";
-    btn.style.top = "-2px";
-
-    // stile inline: IDENTICO al print, ma margine più piccolo perché è "a destra della stampante"
-    btn.style.display = "inline-block";
-    btn.style.verticalAlign = "middle";
-    btn.style.marginLeft = "0.2rem";
-    btn.style.padding = "2px 6px";
-    btn.style.border = "none";
-    btn.style.background = "transparent";
-    btn.style.cursor = "pointer";
-    return btn;
-  }
-  // --- END NEW ---
 
   // ---------- helper: convert canvases & svgs in the clone to images ----------
   function convertGraphicsToImages(origRoot, cloneRoot) {
@@ -195,9 +160,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    // remove eventuali print/reset buttons nella clone
+    // remove eventuali print buttons nella clone
     clone.querySelectorAll(".print-figure-btn").forEach(b => b.remove());
-    clone.querySelectorAll(".reset-graph-btn").forEach(b => b.remove());
 
     // prepara label stampabile (se labelEl fornita)
     let printableHTML;
@@ -255,100 +219,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 250);
   }
 
-  // --- NEW: reset graph ---
-
-
-function resetGraphForFigure(fig) {
-  // 1) trova la view associata a questo container
-  let v = null;
-  try {
-    const allViews = window.views || window["views"];
-    if (Array.isArray(allViews)) {
-      v = allViews.find(vv =>
-        vv && vv.div && typeof vv.div.node === "function" && vv.div.node() === fig
-      );
-      // rimuovi la vecchia view dall'array globale
-      if (v) {
-        const idx = allViews.indexOf(v);
-        if (idx >= 0) allViews.splice(idx, 1);
-      }
-    }
-  } catch (e) {}
-
-  // 2) svuota il container e rimuovi il flag "loaded"
-  fig.innerHTML = "";
-  fig.classList.remove("kg-loaded");
-
-  // 3) ricrea la view RIUSANDO la stessa logica di loadGraphs(), ma solo per questo div
-  const src = fig.getAttribute("src");
-  const tmp = fig.getAttribute("template");
-
-  function generateViewFromYamlText(t) {
-    const y = jsyaml.safeLoad(t);
-    const j = JSON.parse(
-      JSON.stringify(y).replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&")
-    );
-
-    let custom = "";
-    if (tmp) {
-      d3.text(tmp).then(template_file => {
-        const yt = jsyaml.safeLoad(template_file);
-        let yts = JSON.stringify(yt)
-          .replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&");
-
-        for (const key in j) {
-          if (key === "custom") custom = j[key];
-          const searchTerm = new RegExp("template.\\b" + key + "\\b", "g");
-          yts = yts.replace(searchTerm, j[key]);
-        }
-
-        const jt = JSON.parse(yts);
-        jt.custom = custom;
-
-        // push nuova view SOLO per questo grafico
-        (window.views || window["views"]).push(new KG.View(fig, jt));
-        fig.classList.add("kg-loaded");
-      });
-    } else {
-      (window.views || window["views"]).push(new KG.View(fig, j));
-      fig.classList.add("kg-loaded");
-    }
-  }
-
-  // Caso A: YAML inline o YAML da file
-  if (!src || src.indexOf(".yml") > -1) {
-    if (src) {
-      d3.text(src).then(yaml_file => generateViewFromYamlText(yaml_file));
-    } else {
-      const inlineDef = fig.dataset.kgInlineYaml || "";
-      generateViewFromYamlText(inlineDef);
-    }
-    return;
-  }
-
-  // Caso B: definizione già in KG.viewData
-  if (KG["viewData"] && Object.prototype.hasOwnProperty.call(KG["viewData"], src)) {
-    (window.views || window["views"]).push(new KG.View(fig, KG["viewData"][src]));
-    fig.classList.add("kg-loaded");
-    return;
-  }
-
-  // Caso C: JSON da URL
-  d3.json(src + "?update=true").then(data => {
-    if (!data) {
-      fig.innerHTML = `<p>oops, ${src} doesn't seem to exist.</p>`;
-      return;
-    }
-    (window.views || window["views"]).push(new KG.View(fig, data));
-    fig.classList.add("kg-loaded");
-  });
-}
-
-
-
-
-  // --- END NEW ---
-
   // MAIN: attach buttons
   function attachButtons() {
     const labels = document.querySelectorAll(".figure-label");
@@ -363,18 +233,6 @@ function resetGraphForFigure(fig) {
       // trova il primo container dopo la label (ordine documento)
       const fig = findFirstKgAfter(el);
       if (!fig) return;
-
-      // --- SAVE INLINE YAML FOR HARD RESET (only once) ---
-      if (!fig.getAttribute("src") && !fig.dataset.kgInlineYaml) {
-        const html = (fig.innerHTML || "").trim();
-
-        // Se non è già stato renderizzato (cioè non contiene SVG)
-        if (html && html.indexOf("<svg") === -1) {
-          fig.dataset.kgInlineYaml = html;
-        }
-      }
-      // --- END SAVE ---
-
       // se il container stesso dichiara data-print-button="false" o classe no-print-button, skip
       if (fig.dataset && fig.dataset.printButton === "false") return;
       if (fig.classList && fig.classList.contains("no-print-button")) return;
@@ -386,16 +244,6 @@ function resetGraphForFigure(fig) {
         openPrintWindowWithFigure(fig, el);
       });
       el.appendChild(btn);
-
-      // --- NEW: reset button right of print icon ---
-      if (el.querySelector && el.querySelector(".reset-graph-btn")) return;
-      const rbtn = makeResetButton();
-      rbtn.addEventListener("click", (ev) => {
-        ev.preventDefault();
-        resetGraphForFigure(fig);
-      });
-      el.appendChild(rbtn);
-      // --- END NEW ---
     });
   }
 
