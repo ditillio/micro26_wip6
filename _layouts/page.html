@@ -48,6 +48,10 @@
 <div class="watermark">
     Copyright &copy; 2025-2026 {{ textbook.author}}
 </div>
-</body>
+{% if page.foreword %}
+  {% assign lang = page.url | split: '/' | slice: 1, 1 | first %}
+  {% include footer.html language=lang hide_back_to_top=true %}
+{% endif %}
 {% include scripts.html KGversion=version bootstrap=false renderMath=true %}
+</body>
 </html>

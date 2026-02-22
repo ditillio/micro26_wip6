@@ -2,11 +2,15 @@
     <div class="container">
         <p class="float-end mb-1">
             <a href="#">
-                {% if include.language == "it" %}
-                    Ritorno all'inizio
-                {% else %}
-                    Back to top
-                {% endif %}
+                {% unless include.hide_back_to_top %}
+                  <a href="#top">
+                    {% if include.language == "it" %}
+                      Torna su
+                    {% else %}
+                      Back to top
+                    {% endif %}
+                  </a>
+                {% endunless %}
             </a>
         </p>
 
