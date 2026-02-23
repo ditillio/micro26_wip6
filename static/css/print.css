@@ -174,9 +174,9 @@
 
 
 
+/* === trasparenza copyright a fondo pagina per "stampa questa sezione" === */
 
 @media print {
-
   .watermark {
     opacity: 0.5 !important;        /* aumenta rispetto a 0.2/0.3 */
     color: #666 !important;         /* più scuro ma non nero pieno */
