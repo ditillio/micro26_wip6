@@ -30,6 +30,19 @@ document.addEventListener("DOMContentLoaded", () => {
     return (lang === "en") ? "Reset graph" : "Resetta grafico";
   }
 
+  function getLangCode() {
+    const path = window.location.pathname || "";
+    const m = path.match(/\/(it|en)(\/|$)/);
+    return m ? m[1] : "it";
+  }
+
+  function getPrintFooterText() {
+    const lang = getLangCode();
+    return (lang === "en")
+      ? "Notes on Microeconomics. Copyright © 2025-2026 Alfredo Di Tillio. All rights reserved."
+      : "Note di microeconomia. Copyright © 2025-2026 Alfredo Di Tillio. All rights reserved.";
+  }
+
   function makeButton() {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -224,23 +237,56 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const doc = iframe.contentDocument || iframe.contentWindow.document;
     doc.open();
-    doc.write(`
-      <html>
-        <head>
-          <meta charset="utf-8"/>
-          ${styles}
-          <style>
-            @page { margin: 12mm; }
-            body { background: white; margin: 0; padding: 12mm; }
-            .kg-container, figure { max-width: 100% !important; box-sizing: border-box; }
-            .print-figure-label { font-weight: 700; font-size: 18px; margin-bottom: 10px; }
-            /* ensure images (converted canvases/svg) fit inside the page */
-            img { max-width: 100%; height: auto; display: block; }
-          </style>
-        </head>
-        <body>${printableHTML}</body>
-      </html>
-    `);
+
+const footerText = getPrintFooterText();
+
+doc.write(`
+  <html>
+    <head>
+      <meta charset="utf-8"/>
+      ${styles}
+      <style>
+        @page { margin: 12mm; }
+
+        /* lascia spazio al footer (altrimenti può sovrapporsi alla figura) */
+        body { background: white; margin: 0; padding: 12mm; padding-bottom: 22mm; }
+
+        .kg-container, figure { max-width: 100% !important; box-sizing: border-box; }
+        .print-figure-label { font-weight: 700; font-size: 18px; margin-bottom: 10px; }
+        /* ensure images (converted canvases/svg) fit inside the page */
+        img { max-width: 100%; height: auto; display: block; }
+
+        /* --- NEW: footer su ogni pagina stampata --- */
+        .print-figure-footer {
+          position: fixed;
+          left: 12mm;
+          right: 12mm;
+          bottom: 8mm;
+          text-align: center;
+          font-size: 1rem;
+          line-height: 1.2;
+          color: #111;
+          z-index: 9999;
+        }
+
+        @media print {
+          /* prova a rendere il testo più “pieno” in stampa */
+          .print-figure-footer {
+            color: #111 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+        }
+        /* --- END NEW --- */
+      </style>
+    </head>
+    <body>
+      ${printableHTML}
+      <div class="print-figure-footer">${footerText}</div>
+    </body>
+  </html>
+`);
+
     doc.close();
 
     // give the iframe a short moment to layout and load data URLs
