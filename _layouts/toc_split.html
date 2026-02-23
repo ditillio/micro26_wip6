@@ -46,9 +46,25 @@
     <span id="go-big-toc" class="go-big-toc" role="button" tabindex="0"
           aria-label="{% if _lang == 'en' %}Go to table of contents{% else %}Vai all'indice{% endif %}"
           title="{% if _lang == 'en' %}Go to table of contents{% else %}Vai all'indice{% endif %}">
-      <svg class="go-big-toc-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M3 11.5L12 4l9 7.5M6.5 10.5V20h11V10.5" />
-      </svg>
+          <svg class="go-big-toc-icon"
+               viewBox="0 0 24 24"
+               aria-hidden="true"
+               focusable="false"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2"
+               stroke-linecap="round"
+               stroke-linejoin="round"
+               width="20"
+               height="20"
+               style="vertical-align:middle">
+            <!-- tetto: da x=4 a x=20, apex a x=12 -->
+            <path d="M4 11.5 L12 4 L20 11.5" />
+            <!-- corpo casa: da x=6 a x=18 (centrato attorno a 12), top y=10.5 -->
+            <path d="M6 10.5 V20 h12 V10.5" />
+            <!-- porta ad arco (centrata) -->
+            <path d="M10 20 v-4 a2 2 0 0 1 4 0 v4" />
+          </svg>
     </span>
     <span id="content-reload" class="content-reload" role="button" tabindex="0"
           aria-label="{% if _lang == 'en' %}Reload content{% else %}Ricarica pagina{% endif %}"
