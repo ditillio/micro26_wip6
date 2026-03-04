@@ -891,3 +891,91 @@ body.sidebar-hidden .toc-split-right{
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+/* =========================================================
+   TOC laterale sinistra: dark theme + font cross-platform
+   ========================================================= */
+
+/* Sidebar sinistra: sfondo e font */
+.toc-split-left{
+  background: #2b2724 !important;
+  color: #e9e6dc !important;
+  border-right: 1px solid #2a2a2a !important;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* Titolo e autore (nel tuo CSS l’autore è nero hardcoded) */
+.toc-split-left .sidebar-site-title{
+  color: #fffff8 !important;
+}
+.toc-split-left .sidebar-author{
+  color: #cfcfc6 !important;
+  opacity: 1 !important;
+}
+
+/* Link capitoli e sezioni */
+.toc-split-left a{
+  color: #f2efe8 !important;
+  text-shadow: none !important;
+  -webkit-text-stroke: 0 !important;
+  filter: none !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+/* Hover */
+.toc-split-left a:hover{
+  color: #ffffff !important;
+}
+
+/* Numeri capitoli/sezioni */
+.toc-split-left .number,
+.toc-split-left .section_number{
+  color: #a8a39a !important;   /* più discreti */
+}
+
+/* Banner: togli overlay chiaro + “cornice grigia” (shadow) */
+.toc-split-left .sidebar-top-banner::after{
+  background: transparent !important;
+}
+.toc-split-left .sidebar-top-banner img{
+  box-shadow: none !important;
+  filter: 
+    grayscale(30%) 
+    saturate(75%) 
+    brightness(85%);
+  opacity: 0.55;
+}
+
+/* ===== Font sidebar (garantita su Windows) ===== */
+.toc-split-left,
+.toc-split-left *{
+font-family: "Source Sans 3", sans-serif !important;
+}
+
+.toc-split-left{
+  font-weight: 400;
+  letter-spacing: 0.2px;
+}
+
+.toc-split-left .chapter > a{
+  font-weight: 500;
+}
+
+.toc-split-left .sidebar-site-title{
+  font-weight: 600;
+}
+
+
+
