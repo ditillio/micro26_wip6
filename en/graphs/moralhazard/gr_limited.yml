@@ -1,6 +1,6 @@
 params:
 
-- {name: w, value: 100, min: 100, max: 1000, round: 5}
+- {name: w, value: 200, min: 100, max: 1000, round: 5}
 - {name: b, value: 600, min: 0, max: 1000, round: 40}
 - {name: d, value: 10, min: 0, max: 4}
 - {name: ubar, value: 15}
@@ -283,13 +283,13 @@ layout:
             text: \LARGE{\textbf{BINGO!}}
             bgcolor: none
             color: Red
-            show: params.riskav == 0 && params.effort == 1 && calcs.ewH == 625
+            show: params.riskav == 0 && params.b == 800 && params.w == 100
         - Label:
             coordinates: [500, -6]
             text: \LARGE{\textbf{BINGO!}}
             bgcolor: none
             color: Red
-            show: params.riskav == 1 && params.effort == 1 && params.b == 0 && params.w == 625
+            show: params.riskav == 1 && params.b == 800 && params.w == 100
 
 
 

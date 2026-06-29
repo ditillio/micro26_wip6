@@ -284,7 +284,7 @@ layout:
             text: \LARGE{\textbf{BINGO!}}
             bgcolor: none
             color: Red
-            show: params.riskav == 0 && calcs.ewH == 700
+            show: params.riskav == 0 && params.b == 800 && params.w == 100
         - Label:
             coordinates: [500, -6]
             text: \LARGE{\textbf{BINGO!}}
